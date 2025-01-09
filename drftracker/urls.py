@@ -16,8 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from core.views import show_forms
+
 
 urlpatterns = [
+    path('income/', show_forms.IncomeView.as_view(), name='income'),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
     # path("__reload__/", include("django_browser_reload.urls")),
