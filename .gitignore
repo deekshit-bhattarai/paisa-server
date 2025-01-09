@@ -1,0 +1,4 @@
+tracker-api/
+*/migrations
+*/__pycache__
+*/*/__pycache__
