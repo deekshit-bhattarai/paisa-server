@@ -30,7 +30,6 @@ class LoginView(APIView):
 class RefreshTokenView(APIView):
     def post(self, request):
         refresh_token = request.data['refresh_token']
-
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
             if payload.get('type') != 'refresh':
@@ -38,11 +37,11 @@ class RefreshTokenView(APIView):
             user_id = payload['user_id']
             user = User.objects.get(id=user_id)
             access_token = generate_access_jwt_token(user)
-            return Response({'access_token' : access_token}, status=status.HTTP_200_OK)
+            return Response({'access_token' : access_token, 'refresh_token': refresh_token }, status=status.HTTP_200_OK)
 
-        except jwt.ExpiredSignatureError:
-            raise Response({'error' : 'Refrsh token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
-        except jwt.InvalidTokenError:
-            raise Response({'error' : 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-
-
+        # except jwt.ExpiredSignatureError:
+        #     raise Response({'error' : 'Refrsh token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        # except jwt.InvalidTokenError:
+        #     raise Response({'error' : 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(str(e))
