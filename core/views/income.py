@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from core import core_serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,11 +17,18 @@ class IncomeView(APIView):
         """
         Disply income form for user
         """
-        breakpoint()
-        incomes = IncomeTracker.objects.filter(user=request.user.id)
-        serializer = core_serializers.IncomeSerializer(incomes, many=True, context={'user' : request.user})
-        data = serializer.data
-        return Response({'data' : data})
+        pk = kwargs.get('pk', None)
+        print(pk)
+        if pk:
+            income = get_object_or_404(IncomeTracker, pk=pk, user=request.user)
+            serializer = core_serializers.IncomeSerializer(income)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        # breakpoint()
+        else:
+            incomes = IncomeTracker.objects.filter(user=request.user)
+            serializer = core_serializers.IncomeSerializer(incomes, many=True)
+            data = serializer.data
+            return Response({'data' : data}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         """
@@ -35,7 +43,9 @@ class IncomeView(APIView):
             'time' : request.data["time"],
             'user': request.user.id
         }
-        serializer = core_serializers.IncomeSerializer(data=data)
+        serializer = core_serializers.IncomeSerializer( data=data )
+        breakpoint()
+        print(request)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
