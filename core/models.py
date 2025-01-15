@@ -28,3 +28,7 @@ class ExpenseTracker(models.Model):
 
     class Meta:
         ordering = ['time']
+
+class BlacklistedTokens(models.Model):
+    token = models.TextField()
+    blacklisted_at = models.DateTimeField(auto_now_add=True)

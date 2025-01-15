@@ -28,7 +28,9 @@ def generate_access_jwt_token(user):
 
 def generate_refresh_jwt_token(user):
     """
-    Generate refresh JWT for given user
+    Generate JWT token
+
+    :param user [user]: Specifies which user is asking to generate JWT token
     """
     expiration = datetime.utcnow() + timedelta(seconds=REFRESH_TOKEN_EXPIRATION_SECONDS)
     payload = {
@@ -86,6 +88,7 @@ class JWTAuthentication(BaseAuthentication):
     def get_token_from_request(self, request):
         # Extract the token from the Authorization header
         auth_header = request.headers.get('Authorization')
+        print(f'Auth header is : {auth_header}')
         if auth_header and auth_header.startswith('Bearer '):
             return auth_header.split(' ')[1]  # Return the token part
         return None
@@ -97,26 +100,3 @@ class JWTAuthentication(BaseAuthentication):
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
-    # if not token:
-    #     return None
-    # try:
-    #     payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-    #     print(payload)
-    # except Exception as e:
-    #     print(f"An error occured {e}")
-
-# class ValidateAcccessToken(BaseAuthentication):
-#     def __init__(self, access_token_payload=None):
-#         self.access_token_payload = access_token_payload
-#
-#
-#     def authenticate(self, request):
-#         token = self.get_token_from_request(request)
-#         if not token:
-#             return None
-#         try:
-#             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-#             print(payload)
-#         except Exception as e:
-#             print(f"An error occured {e}")
-#

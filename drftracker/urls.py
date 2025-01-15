@@ -41,6 +41,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('income/', show_forms.IncomeView.as_view(), name='income'),
     path('auth/', auth.LoginView.as_view(), name='auth'),
+    path('logout/', auth.LogOutView.as_view(), name='logout'),
     path('refresh/', auth.RefreshTokenView.as_view(), name='refresh_token'),
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
