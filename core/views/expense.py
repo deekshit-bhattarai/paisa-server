@@ -4,35 +4,35 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
-from core.models import IncomeTracker
+from core.models import ExpenseTracker
 
 
-class IncomeView(APIView):
+class ExpenseView(APIView):
     """
-    Form for creating adding income for user
+    Form for creating adding expense for user
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         """
-        Disply income form for user
+        Disply expense form for user
         """
         pk = kwargs.get('pk', None)
         print(pk)
         if pk:
-            income = get_object_or_404(IncomeTracker, pk=pk, user=request.user)
-            serializer = core_serializers.IncomeSerializer(income)
+            expense = get_object_or_404(ExpenseTracker, pk=pk, user=request.user)
+            serializer = core_serializers.IncomeSerializer(expense)
             return Response(serializer.data, status=status.HTTP_200_OK)
         # breakpoint()
         else:
-            incomes = IncomeTracker.objects.filter(user=request.user)
-            serializer = core_serializers.IncomeSerializer(incomes, many=True)
+            expenses = ExpenseTracker.objects.filter(user=request.user)
+            serializer = core_serializers.ExpenseSerializer(expenses, many=True)
             data = serializer.data
             return Response({'data' : data}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         """
-        Add income from user
+        Add expense from user
         """
         # breakpoint()
         data = {
@@ -40,10 +40,12 @@ class IncomeView(APIView):
             'source' : request.data['source'],
             'reason' : request.data['reason'],
             'remarks' : request.data['remarks'],
+            'category': request.data['category'],
             'time' : request.data["time"],
-            'user': request.user.id
+            'user': request.user
         }
-        serializer = core_serializers.IncomeSerializer( data=data, context={'request' : request} )
+        serializer = core_serializers.ExpenseSerializer( data=data, context={'request' : request} )
+        breakpoint()
         print(request)
         if serializer.is_valid():
             serializer.save()

@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from core.views import income, auth
+from core.views import add_category, current_balance, income, auth, expense
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -39,11 +39,19 @@ urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('income/', income.IncomeView.as_view(), name='income'),
-    path('income/<int:pk>/', income.IncomeView.as_view(), name='income'),
+
     path('auth/', auth.LoginView.as_view(), name='auth'),
     path('logout/', auth.LogOutView.as_view(), name='logout'),
     path('refresh/', auth.RefreshTokenView.as_view(), name='refresh_token'),
+
+    path('income/', income.IncomeView.as_view(), name='income'),
+    path('income/<int:pk>/', income.IncomeView.as_view(), name='income'),
+
+    path('expense/', expense.ExpenseView.as_view(), name='expense'),
+    path('add_category/', add_category.AddCategory.as_view(), name='add_category'),
+
+    path('current_balance/', current_balance.CurrentBalance.as_view(), name='current_balance'),
+
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
     # path("__reload__/", include("django_browser_reload.urls")),
