@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from core.views import add_category, current_balance, income, auth, expense
+from core.views import add_category, current_balance, filters, income, auth, expense
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -46,6 +46,7 @@ urlpatterns = [
 
     path('income/', income.IncomeView.as_view(), name='income'),
     path('income/<int:pk>/', income.IncomeView.as_view(), name='income'),
+    path('income/filter/', filters.IncomeFilter.as_view(), name='income_filter'),
 
     path('expense/', expense.ExpenseView.as_view(), name='expense'),
     path('add_category/', add_category.AddCategory.as_view(), name='add_category'),
