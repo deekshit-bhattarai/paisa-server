@@ -49,7 +49,9 @@ urlpatterns = [
     path('income/filter/', filters.IncomeFilter.as_view(), name='income_filter'),
 
     path('expense/', expense.ExpenseView.as_view(), name='expense'),
+    path('expense/<int:pk>/', expense.ExpenseView.as_view(), name='expense'),
     path('add_category/', add_category.AddCategory.as_view(), name='add_category'),
+    path('expense/filter/', filters.IncomeFilter.as_view(), name='expense_filter'),
 
     path('current_balance/', current_balance.CurrentBalance.as_view(), name='current_balance'),
 
