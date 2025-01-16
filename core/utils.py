@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta
+from itertools import chain
+
 import jwt
+from django.conf import settings
+from django.db import models
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
-from django.conf import settings
 
+from core.models import ExpenseTracker, IncomeTracker
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRATION_SECONDS = 300
+ACCESS_TOKEN_EXPIRATION_SECONDS = 86400
 REFRESH_TOKEN_EXPIRATION_SECONDS = 432000
 
 def generate_access_jwt_token(user):
@@ -100,3 +104,39 @@ class JWTAuthentication(BaseAuthentication):
             return User.objects.get(id=user_id)
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
+
+
+def current_balance(user):
+    income =  ( IncomeTracker.objects.filter(user=user).aggregate(models.Sum("amount"))["amount__sum"] or 0 ) 
+    expense = ( ExpenseTracker.objects.filter(user=user).aggregate(models.Sum("amount"))["amount__sum"] or 0)
+
+    current_balance = income - expense
+    return {
+        'current_balance' : current_balance,
+        'total_income' : income,
+        'total_expense' : expense
+    }
+
+
+def all_transactions(user):
+
+    income_transactions = IncomeTracker.objects.filter(user=user).values(
+        'amount', 'source', 'reason',  'remarks', 'time'
+    ).annotate(transaction_type=models.Value('Income', output_field=models.CharField()))
+
+    expense_transactions = ExpenseTracker.objects.filter(user=user).values(
+        'amount', 'source', 'reason', 'category', 'remarks', 'time'
+    ).annotate(transaction_type=models.Value('Expense', output_field=models.CharField()))
+
+    # Combine and sort by time
+    recent_transactions = sorted(
+        chain(income_transactions, expense_transactions),
+        key=lambda x: x['time'],
+        reverse=True
+    )
+    return {
+        'recent_transactions' : recent_transactions[:5],
+        'all_transactions' : recent_transactions,
+        'income_table': income_transactions,
+        'expense_table' : expense_transactions
+    }
