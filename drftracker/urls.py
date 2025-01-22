@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from core.views import add_category, current_balance, filters, income, auth, expense
+from core.views import categories, balance_n_transactions, filters, income, auth, expense
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -41,6 +41,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
     path('auth/', auth.LoginView.as_view(), name='auth'),
+    path('register/', auth.UserRegistrationView.as_view(), name='register'),
     path('logout/', auth.LogOutView.as_view(), name='logout'),
     path('refresh/', auth.RefreshTokenView.as_view(), name='refresh_token'),
 
@@ -50,10 +51,12 @@ urlpatterns = [
 
     path('expense/', expense.ExpenseView.as_view(), name='expense'),
     path('expense/<int:pk>/', expense.ExpenseView.as_view(), name='expense'),
-    path('add_category/', add_category.AddCategory.as_view(), name='add_category'),
+    path('categories/', categories.Categories.as_view(), name='add_category'),
     path('expense/filter/', filters.IncomeFilter.as_view(), name='expense_filter'),
 
-    path('current_balance/', current_balance.CurrentBalance.as_view(), name='current_balance'),
+    path('current_balance/', balance_n_transactions.CurrentBalance.as_view(), name='current_balance'),
+
+    path('recent_transactions', balance_n_transactions.RecentTransactions.as_view(), name='recent_transactions'),
 
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls'))
