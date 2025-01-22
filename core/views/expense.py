@@ -45,7 +45,6 @@ class ExpenseView(APIView):
             'user': request.user
         }
         serializer = core_serializers.ExpenseSerializer( data=data, context={'request' : request} )
-        breakpoint()
         print(request)
         if serializer.is_valid():
             serializer.save()

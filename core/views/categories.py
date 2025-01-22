@@ -1,21 +1,20 @@
 from core import core_serializers
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.models import ExpenseCategory
 
 
-class AddCategory(APIView):
+class Categories(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request, *args, **kwargs):
-        breakpoint()
         categories = ExpenseCategory.objects.filter(user=request.user)
         serializer = core_serializers.CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
     def post(self, request, *args, **kwargs):
         print(request)
-        breakpoint()
         data = {
             'name' : request.data['name']
         }

@@ -8,3 +8,10 @@ class CurrentBalance(APIView):
     def get(self, request, *args, **kwargs):
         current_balance = utils.current_balance(request.user)
         return Response({'current_balance' : current_balance }, status=status.HTTP_200_OK)
+
+class RecentTransactions(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        recent_transactions = utils.all_transactions(request.user).get('recent_transactions')
+        return Response({'recent_transactions': recent_transactions}, status=status.HTTP_200_OK)

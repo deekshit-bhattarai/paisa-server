@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from core import core_serializers
 
 from core.utils import (
     ALGORITHM,
@@ -13,6 +14,17 @@ from core.utils import (
     generate_access_jwt_token,
     generate_refresh_jwt_token,
 )
+
+class UserRegistrationView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = core_serializers.RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message' : 'User registered successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -46,7 +58,6 @@ class LogOutView(APIView):
         refresh_token = request.data.get('refresh_token')
         access_token = request.data.get('access_token')
         print(refresh_token)
-        breakpoint()
         if not refresh_token:
 
             return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
