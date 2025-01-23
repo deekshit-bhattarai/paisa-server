@@ -1,17 +1,27 @@
 from rest_framework import permissions, status
-from rest_framework.views import APIView, Response
+from rest_framework.views import APIView
 from core import utils
+from core.mixins import CustomResponseMixin
 
-class CurrentBalance(APIView):
+class CurrentBalance(CustomResponseMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         current_balance = utils.current_balance(request.user)
-        return Response({'current_balance' : current_balance }, status=status.HTTP_200_OK)
+        return self.return_response(
+            success=True,
+            message="Successfully got current balance",
+            data=current_balance,
+            status=status.HTTP_200_OK
+        )
 
-class RecentTransactions(APIView):
+class RecentTransactions(CustomResponseMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         recent_transactions = utils.all_transactions(request.user).get('recent_transactions')
-        return Response({'recent_transactions': recent_transactions}, status=status.HTTP_200_OK)
+        return self.return_response(
+            success=True,
+            message="Recent transactions fetched successfully",
+            data = recent_transactions
+        )

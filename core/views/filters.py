@@ -1,17 +1,16 @@
-from rest_framework import permissions, status
-from rest_framework.response import Response
+from rest_framework import permissions
 from rest_framework.views import APIView
 
 from core.core_serializers import ExpenseSerializer, IncomeSerializer
+from core.mixins import CustomResponseMixin
 from core.models import ExpenseTracker, IncomeTracker
 
 
-class IncomeFilter(APIView):
+class IncomeFilter(CustomResponseMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         queryset = IncomeTracker.objects.filter(user=request.user)
-        breakpoint()
 
         source = request.query_params.get('source', None)
         category = request.query_params.get('category', None)
@@ -30,9 +29,13 @@ class IncomeFilter(APIView):
             queryset = queryset.filter(time__lte=time_to)
 
         serializer = IncomeSerializer(queryset, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        return self.return_response(
+            success=True,
+            message="Filtered income successfully",
+            data=serializer.data
+        )
 
-class ExpenseFilter(APIView):
+class ExpenseFilter(CustomResponseMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
@@ -55,4 +58,8 @@ class ExpenseFilter(APIView):
             queryset = queryset.filter(time__lte=time_to)
 
         serializer = ExpenseSerializer(queryset, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        return self.return_response(
+            success=True,
+            message="Filtered expense successfully",
+            data=serializer.data
+        )

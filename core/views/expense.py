@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404
 from core import core_serializers
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from core.mixins import CustomResponseMixin
 from core.models import ExpenseTracker
 
 
-class ExpenseView(APIView):
+class ExpenseView(CustomResponseMixin, APIView):
     """
     Form for creating adding expense for user
     """
@@ -22,13 +22,21 @@ class ExpenseView(APIView):
         if pk:
             expense = get_object_or_404(ExpenseTracker, pk=pk, user=request.user)
             serializer = core_serializers.IncomeSerializer(expense)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return self.return_response(
+                success=True,
+                message = "Got selected expense successfully",
+                data = serializer.data
+            )
         # breakpoint()
         else:
             expenses = ExpenseTracker.objects.filter(user=request.user)
             serializer = core_serializers.ExpenseSerializer(expenses, many=True)
             data = serializer.data
-            return Response({'data' : data}, status=status.HTTP_200_OK)
+            return self.return_response(
+                success=True,
+                message = "Filtered expense successfully",
+                data = data
+            )
 
     def post(self, request, *args, **kwargs):
         """
@@ -48,9 +56,19 @@ class ExpenseView(APIView):
         print(request)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return self.return_response(
+                success=True,
+                message="Added expense successfully", 
+                data=serializer.data,
+                status = status.HTTP_201_CREATED
+            )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return self.return_response(
+            success=False,
+            message="An error occured",
+            errors = {'error' : serializer.errors},
+            status = status.HTTP_400_BAD_REQUEST
+        )
 
 
 

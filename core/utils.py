@@ -7,6 +7,7 @@ from django.db import models
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication
 
+from core.mixins import CustomResponseMixin
 from core.models import ExpenseTracker, IncomeTracker
 
 SECRET_KEY = settings.SECRET_KEY
@@ -14,15 +15,26 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRATION_SECONDS = 86400
 REFRESH_TOKEN_EXPIRATION_SECONDS = 432000
 
-def generate_access_jwt_token(user):
-    """
-    Generate access JWT for given user
-    """
-    expiration = datetime.utcnow() + timedelta(seconds=ACCESS_TOKEN_EXPIRATION_SECONDS)
-    payload = {
+
+
+
+def define_payload(user):
+    return {
         'user_id' : user.id,
         'username': user.username,
         'iat': datetime.utcnow(),
+    }
+
+
+def generate_access_jwt_token(user: str) -> str:
+    """
+    Generate access JWT for given user
+    """
+    print(f"Generating access token for {user} \n")
+    info = define_payload(user)
+    expiration = datetime.utcnow() + timedelta(seconds=ACCESS_TOKEN_EXPIRATION_SECONDS)
+    payload = {
+        **info,
         'exp' : expiration,
         'type' : 'access'
 
@@ -30,17 +42,16 @@ def generate_access_jwt_token(user):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-def generate_refresh_jwt_token(user):
+def generate_refresh_jwt_token(user: str) -> str:
     """
     Generate JWT token
 
     :param user [user]: Specifies which user is asking to generate JWT token
     """
+    info = define_payload(user)
     expiration = datetime.utcnow() + timedelta(seconds=REFRESH_TOKEN_EXPIRATION_SECONDS)
     payload = {
-        'user_id' : user.id,
-        'username': user.username,
-        'iat': datetime.utcnow(),
+        **info,
         'exp' : expiration,
         'type' : 'refresh'
 
@@ -48,7 +59,15 @@ def generate_refresh_jwt_token(user):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-def decode_jwt_token(token):
+def decode_jwt_token(token: str) -> dict:
+    """
+    Decodes JWT token to return payload
+
+    :param token: str
+    :return: dict
+    :raises Exception: Expired Token
+    :raises Exception: Invalid Token
+    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         return payload
@@ -57,18 +76,19 @@ def decode_jwt_token(token):
     except jwt.InvalidTokenError:
         raise Exception("Invalid token provided")
 
-def authenticate(request):
+
+def authenticate(request) -> bool:
     print("Here is authenticate")
     return True
 
 
-class JWTAuthentication(BaseAuthentication):
+class JWTAuthentication(CustomResponseMixin, BaseAuthentication):
     def authenticate(self, request):
         print("Hello from authenticate")
         # Get token from Authorization header (format: "Bearer <token>")
         token = self.get_token_from_request(request)
         if not token:
-            return None  # No token, proceed without authentication
+            return None  
 
         try:
             # Decode the token
@@ -106,7 +126,7 @@ class JWTAuthentication(BaseAuthentication):
             raise exceptions.AuthenticationFailed('No such user')
 
 
-def current_balance(user):
+def current_balance(user: str) -> dict:
     income =  ( IncomeTracker.objects.filter(user=user).aggregate(models.Sum("amount"))["amount__sum"] or 0 ) 
     expense = ( ExpenseTracker.objects.filter(user=user).aggregate(models.Sum("amount"))["amount__sum"] or 0)
 
@@ -118,7 +138,7 @@ def current_balance(user):
     }
 
 
-def all_transactions(user):
+def all_transactions(user: str) -> dict:
 
     income_transactions = IncomeTracker.objects.filter(user=user).values(
         'amount', 'source', 'reason',  'remarks', 'time'
