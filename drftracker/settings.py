@@ -55,7 +55,7 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'core.utils.JWTAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ]
 }
 
@@ -85,6 +85,15 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization"
+    # "access-control-allow-origin",
+    # "access-control-allow-headers"
+]
+
+SECURE_REFERRER_POLICY = "no-referrer"
 
 ROOT_URLCONF = 'drftracker.urls'
 
