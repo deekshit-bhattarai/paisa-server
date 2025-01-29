@@ -12,13 +12,19 @@ from core import core_serializers
 from core.utils import (
     ALGORITHM,
     SECRET_KEY,
-    ACCESS_TOKEN_EXPIRATION_SECONDS ,
     REFRESH_TOKEN_EXPIRATION_SECONDS,
+    ACCESS_TOKEN_EXPIRATION_SECONDS ,
     generate_access_jwt_token,
     generate_refresh_jwt_token,
 )
 
 class UserRegistrationView(CustomResponseMixin, APIView):
+    """
+    An API view to register the user
+
+    Attributes: 
+        permission_classes: list
+    """
     permission_classes = [AllowAny]
     serializer_class = core_serializers.RegisterSerializer
 
@@ -58,15 +64,16 @@ class LoginView(CustomResponseMixin, APIView):
                 access_token = generate_access_jwt_token(user)
                 refresh_token = generate_refresh_jwt_token(user)
                 response = Response({'message' : 'Login Successful'})
-                response.set_cookie("access_token", access_token, httponly=True, samesite="strict", max_age=ACCESS_TOKEN_EXPIRATION_SECONDS)
-                response.set_cookie("refresh_token", refresh_token, httponly=True, samesite="strict", max_age=REFRESH_TOKEN_EXPIRATION_SECONDS)
+                response.set_cookie("access_token", access_token, samesite=None, httponly=True,  max_age=ACCESS_TOKEN_EXPIRATION_SECONDS, secure=False,)
+                response.set_cookie("refresh_token", refresh_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
+                # breakpoint()
                 print(f"Login response is : {response}")
-                return self.return_response(
-                    success=True,
-                    message="User logged in successfully",
-                    data={"access_token" : access_token, "refresh_token" : refresh_token},
-                    status=status.HTTP_200_OK
-                )
+                return response
+                # return self.return_response(
+                #     success=True,
+                #     message="User logged in successfully",
+                #     data=response
+                # )
             response = Response()
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
@@ -74,14 +81,14 @@ class LoginView(CustomResponseMixin, APIView):
             return self.return_response(
                 success=False,
                 message="Invalid credentials",
-                errors = {"detail" : "Invalid username or password"},
+                errors = {"error" : "Invalid username or password"},
                 status = status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
             return self.return_response(
                 success=False,
                 message="An error occured while logging in",
-                errors = {"detail" : str(e)},
+                errors = {"error" : str(e)},
                 status = status.HTTP_400_BAD_REQUEST
             )
 
@@ -107,7 +114,7 @@ class LogOutView(CustomResponseMixin, APIView):
                 errors= {"error" : "Refresh token is required"},
                 status = status.HTTP_400_BAD_REQUEST
             )
-        
+
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
 
@@ -130,7 +137,6 @@ class LogOutView(CustomResponseMixin, APIView):
             return self.return_response(
                 success=True,
                 message="User logged out successfully",
-                status = status.HTTP_200_OK
             )
         except jwt.ExpiredSignatureError:
             return self.return_response(
@@ -184,7 +190,6 @@ class RefreshTokenView(CustomResponseMixin, APIView):
                 success=True,
                 message = "Token generated successfully",
                 data = {'access_token' : access_token},
-                status = status.HTTP_200_OK
             )
 
         except Exception as e:
