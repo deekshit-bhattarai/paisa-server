@@ -1,5 +1,5 @@
 from core import core_serializers
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.views import APIView
 
 from core.mixins import CustomResponseMixin
@@ -8,8 +8,17 @@ from core.models import ExpenseCategory
 class Categories(CustomResponseMixin, APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request, *args, **kwargs):
+        print(f"Authenticated user {request.user}")
+        if not request.user.is_authenticated:
+            return self.return_response(
+                success=False,
+                message="Please login first",
+                errors = "User is not authenticated",
+                status = status.HTTP_403_FORBIDDEN
+            )
         categories = ExpenseCategory.objects.filter(user=request.user)
         serializer = core_serializers.CategorySerializer(categories, many=True)
+        print(serializer.data)
         return self.return_response(
             success=True,
             message="Got all categories",
