@@ -1,4 +1,4 @@
-from rest_framework import permissions, status
+from rest_framework import permissions
 from rest_framework.views import APIView
 from core import utils
 from core.mixins import CustomResponseMixin
@@ -12,7 +12,6 @@ class CurrentBalance(CustomResponseMixin, APIView):
             success=True,
             message="Successfully got current balance",
             data=current_balance,
-            status=status.HTTP_200_OK
         )
 
 class RecentTransactions(CustomResponseMixin, APIView):
