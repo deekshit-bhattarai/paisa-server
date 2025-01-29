@@ -1,4 +1,3 @@
-
 # Paisa [WIP]
 
 A simple expense tracker made with DRF and tailwindcss
@@ -9,9 +8,9 @@ Having familiarized myself with django's templating, building something that'd w
 
 ## TODO
 
-- [ ] Register and Login User
-- [ ] Dashboard View
-- [ ] Place to add income and expense
-- [ ] Filter based on source, category, date and amount type
-- [ ] All transaction view
-- [ ] Nicer UI/UX
+- [x] Register and Login User
+- [x] Dashboard View
+- [x] Place to add income and expense
+- [x] Filter based on source, category, date and amount type
+- [x] All transaction view
+- [x] Nicer UI/UX
