@@ -27,7 +27,6 @@ class IncomeView(CustomResponseMixin, APIView):
                 message="Got selected income successfully",
                 data=serializer.data,
             )
-        # breakpoint()
         else:
             incomes = IncomeTracker.objects.filter(user=request.user)
             serializer = core_serializers.IncomeSerializer(incomes, many=True)

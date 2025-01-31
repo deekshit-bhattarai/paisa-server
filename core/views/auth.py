@@ -1,22 +1,23 @@
-from core.mixins import CustomResponseMixin
-from core.models import BlacklistedTokens
+
 import jwt
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from core import core_serializers
 
+from core import core_serializers
+from core.mixins import CustomResponseMixin
+from core.models import BlacklistedTokens
 from core.utils import (
     ALGORITHM,
-    SECRET_KEY,
     REFRESH_TOKEN_EXPIRATION_SECONDS,
-    ACCESS_TOKEN_EXPIRATION_SECONDS ,
+    SECRET_KEY,
     generate_access_jwt_token,
     generate_refresh_jwt_token,
 )
+
 
 class UserRegistrationView(CustomResponseMixin, APIView):
     """
@@ -63,17 +64,15 @@ class LoginView(CustomResponseMixin, APIView):
             if user:
                 access_token = generate_access_jwt_token(user)
                 refresh_token = generate_refresh_jwt_token(user)
-                response = Response({'message' : 'Login Successful'})
-                response.set_cookie("access_token", access_token, samesite=None, httponly=True,  max_age=ACCESS_TOKEN_EXPIRATION_SECONDS, secure=False,)
+                response = Response({
+                    "success" : True,
+                    "message" : "User logged in successfully",
+                    "data" : { "access_token" : access_token},
+                }, status=status.HTTP_200_OK)
+                response.set_cookie("access_token", access_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
                 response.set_cookie("refresh_token", refresh_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
-                # breakpoint()
                 print(f"Login response is : {response}")
                 return response
-                # return self.return_response(
-                #     success=True,
-                #     message="User logged in successfully",
-                #     data=response
-                # )
             response = Response()
             response.delete_cookie("access_token")
             response.delete_cookie("refresh_token")
@@ -167,12 +166,14 @@ class LogOutView(CustomResponseMixin, APIView):
                 status = status.HTTP_400_BAD_REQUEST
             )
 
-class RefreshTokenView(CustomResponseMixin, APIView):
+class RefreshTokenView(CustomResponseMixin, APIView) :
     """
     Generate new access token if previous one has expired
     """
     def post(self, request):
-        refresh_token = request.data['refresh_token']
+        # breakpoint()
+        print(request.COOKIES)
+        refresh_token = request.COOKIES['refresh_token']
 
         try:
             payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=ALGORITHM)
@@ -191,6 +192,9 @@ class RefreshTokenView(CustomResponseMixin, APIView):
                 message = "Token generated successfully",
                 data = {'access_token' : access_token},
             )
+
+        except jwt.ExpiredSignatureError:
+            return LogOutView().post(request)
 
         except Exception as e:
             return self.return_response(
