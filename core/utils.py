@@ -40,6 +40,7 @@ def generate_access_jwt_token(user: str) -> str:
 
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    print(f"Generated token is {token}")
     return token
 
 def generate_refresh_jwt_token(user: str) -> str:
@@ -111,11 +112,36 @@ class JWTAuthentication(CustomResponseMixin, BaseAuthentication):
 
     def get_token_from_request(self, request):
         # Extract the token from the Authorization header
-        auth_header = request.headers.get('Authorization')
-        print(f'Auth header is : {auth_header}')
-        if auth_header and auth_header.startswith('Bearer '):
-            return auth_header.split(' ')[1]  # Return the token part
-        return None
+        # breakpoint()
+        print(request.COOKIES)
+        print(request.headers.get('Cookie'))
+        # breakpoint()
+
+        cookie_from_request = request.COOKIES
+
+        if 'access_token' in cookie_from_request:
+            return cookie_from_request['access_token']
+        else:
+            print("No access_token in cookes")
+            return None
+
+        # if 'Cookie' in request.headers:
+        #         auth_header = request.headers.get('Cookie')
+        #         access_token = dict(item.split("=") for item in auth_header.split(';'))
+        #         if access_token:
+        #             print(f"Access token from 'cookie' {access_token.get('access_token')}")
+        #             return access_token['access_token']
+        #         else:
+        #             print("No access token")
+        #             return None
+        # elif 'Bearer' in request.headers:
+        #     print("No auth header")
+        #     return None
+        
+        # print(f'Auth header is : {auth_header}')
+        # if auth_header and auth_header.startswith('Bearer '):
+        #     return auth_header.split(' ')[1]  # Return the token part
+        # return None
 
     def get_user(self, user_id):
         # Retrieve the user from the database based on user_id
