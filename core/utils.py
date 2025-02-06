@@ -15,9 +15,6 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRATION_SECONDS = 86400
 REFRESH_TOKEN_EXPIRATION_SECONDS = 432000
 
-
-
-
 def define_payload(user):
     return {
         'user_id' : user.id,
@@ -85,7 +82,6 @@ def authenticate(request) -> bool:
 
 class JWTAuthentication(CustomResponseMixin, BaseAuthentication):
     def authenticate(self, request):
-        print("Hello from authenticate")
         # Get token from Authorization header (format: "Bearer <token>")
         token = self.get_token_from_request(request)
         if not token:
@@ -105,10 +101,14 @@ class JWTAuthentication(CustomResponseMixin, BaseAuthentication):
             user = self.get_user(user_id)
             return (user, token)  # Return a tuple of (user, token)
         
-        except jwt.ExpiredSignatureError:
-            raise exceptions.AuthenticationFailed('Token has expired')
-        except jwt.InvalidTokenError:
-            raise exceptions.AuthenticationFailed('Invalid token')
+        # except jwt.ExpiredSignatureError:
+        #     raise exceptions.AuthenticationFailed('Token has expired')
+        # except jwt.InvalidTokenError:
+        #     raise exceptions.AuthenticationFailed('Invalid token')
+        except Exception as e:
+            print("------------------")
+            print(f"An error from JWT Authentication {e}")
+            print("------------------")
 
     def get_token_from_request(self, request):
         # Extract the token from the Authorization header
@@ -165,24 +165,24 @@ def current_balance(user: str) -> dict:
 
 
 def all_transactions(user: str) -> dict:
+    income_transactions = list(IncomeTracker.objects.filter(user=user).values(
+        'id', 'amount', 'source', 'reason', 'remarks', 'time'
+    ).annotate(transaction_type=models.Value('Income', output_field=models.CharField())))
 
-    income_transactions = IncomeTracker.objects.filter(user=user).values(
-        'amount', 'source', 'reason',  'remarks', 'time'
-    ).annotate(transaction_type=models.Value('Income', output_field=models.CharField()))
+    expense_transactions = list(ExpenseTracker.objects.filter(user=user).values(
+        'id', 'amount', 'source', 'reason', 'category', 'remarks', 'time'
+    ).annotate(transaction_type=models.Value('Expense', output_field=models.CharField())))
 
-    expense_transactions = ExpenseTracker.objects.filter(user=user).values(
-        'amount', 'source', 'reason', 'category', 'remarks', 'time'
-    ).annotate(transaction_type=models.Value('Expense', output_field=models.CharField()))
-
-    # Combine and sort by time
+    # Combine and sort transactions by 'time' (descending order)
     recent_transactions = sorted(
         chain(income_transactions, expense_transactions),
         key=lambda x: x['time'],
         reverse=True
     )
+
     return {
-        'recent_transactions' : recent_transactions[:5],
-        'all_transactions' : recent_transactions,
+        'recent_transactions': recent_transactions[:5],  # Last 5 transactions
+        'all_transactions': recent_transactions,
         'income_table': income_transactions,
-        'expense_table' : expense_transactions
+        'expense_table': expense_transactions
     }
