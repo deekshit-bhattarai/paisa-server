@@ -64,18 +64,32 @@ class LoginView(CustomResponseMixin, APIView):
             if user:
                 access_token = generate_access_jwt_token(user)
                 refresh_token = generate_refresh_jwt_token(user)
+                # breakpoint()
+                user_data = User.objects.get(username = username)
+                # category = ExpenseCategory.objects.get(user=request.user)
+                # print(category)
+                print(f"Data of user after login {user_data}")
                 response = Response({
                     "success" : True,
                     "message" : "User logged in successfully",
-                    "data" : { "access_token" : access_token},
+                    "data" : { 
+                        "id": user_data.id,
+                        "username" : user_data.username,
+                        "email": user_data.email,
+                        "last_login": user_data.last_login,
+                        "first_name": user_data.first_name,
+                        "last_name": user_data.last_name
+
+                    },
+                    "errors" : None
                 }, status=status.HTTP_200_OK)
                 response.set_cookie("access_token", access_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
                 response.set_cookie("refresh_token", refresh_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
                 print(f"Login response is : {response}")
                 return response
-            response = Response()
-            response.delete_cookie("access_token")
-            response.delete_cookie("refresh_token")
+            # response = Response()
+            # response.delete_cookie("access_token")
+            # response.delete_cookie("refresh_token")
 
             return self.return_response(
                 success=False,
@@ -187,11 +201,15 @@ class RefreshTokenView(CustomResponseMixin, APIView) :
             user_id = payload['user_id']
             user = User.objects.get(id=user_id)
             access_token = generate_access_jwt_token(user)
-            return self.return_response(
-                success=True,
-                message = "Token generated successfully",
-                data = {'access_token' : access_token},
-            )
+
+            response = Response({
+                "success" : True,
+                "message" : "Token regenrated successfully",
+                "data" : None,
+            }, status=status.HTTP_200_OK)
+            response.set_cookie("access_token", access_token, samesite=None, httponly=True, max_age=REFRESH_TOKEN_EXPIRATION_SECONDS, secure=False,)
+            print(f"Login response is : {response}")
+            return response
 
         except jwt.ExpiredSignatureError:
             return LogOutView().post(request)
