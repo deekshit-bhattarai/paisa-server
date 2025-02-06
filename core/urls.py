@@ -8,15 +8,16 @@ urlpatterns = [
     path('refresh/', auth.RefreshTokenView.as_view(), name='refresh_token'),
 
     path('income/', income.IncomeView.as_view(), name='income'),
-    path('income/<int:pk>/', income.IncomeView.as_view(), name='income'),
+    path('income/<int:id>/', income.IncomeView.as_view(), name='income'),
     path('income/filter/', filters.IncomeFilter.as_view(), name='income_filter'),
 
     path('expense/', expense.ExpenseView.as_view(), name='expense'),
-    path('expense/<int:pk>/', expense.ExpenseView.as_view(), name='expense'),
+    path('expense/<int:id>/', expense.ExpenseView.as_view(), name='expense'),
     path('categories/', categories.Categories.as_view(), name='add_category'),
     path('expense/filter/', filters.ExpenseFilter.as_view(), name='expense_filter'),
 
     path('current_balance/', balance_n_transactions.CurrentBalance.as_view(), name='current_balance'),
 
     path('recent_transactions/', balance_n_transactions.RecentTransactions.as_view(), name='recent_transactions'),
+    path('all_transactions/', balance_n_transactions.AllTransactions.as_view(), name='all_transactions')
 ]
