@@ -1,9 +1,10 @@
-from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from core.models import ExpenseCategory, ExpenseTracker, IncomeTracker
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -43,22 +44,63 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class IncomeSerializer(serializers.ModelSerializer):
-    # owner = serializers.ReadOnlyField(source='owner.username')
-    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
-    class Meta:
-        model = IncomeTracker
-        fields = '__all__'
-        
-class ExpenseSerializer(serializers.ModelSerializer):
-    # owner = serializers.ReadOnlyField(source='owner.username')
-    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
-    class Meta:
-        model = ExpenseTracker
-        fields = ['amount', 'source', 'reason', 'category', 'remarks', 'time', 'user']
-
 class CategorySerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default = serializers.CurrentUserDefault())
     class Meta:
         model = ExpenseCategory
         fields = '__all__'
+
+class IncomeSerializer(serializers.ModelSerializer):
+    # owner = serializers.ReadOnlyField(source='owner.username')
+    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
+    category = serializers.SerializerMethodField()
+    transaction_type = serializers.SerializerMethodField()
+    class Meta:
+        model = IncomeTracker
+        fields = '__all__'
+
+    def get_transaction_type(self, obj):
+        return "Income"
+
+    def get_category(self, obj):
+        return None
+        
+class ExpenseSerializer(serializers.ModelSerializer):
+    # owner = serializers.ReadOnlyField(source='owner.username')
+    user = serializers.HiddenField(default = serializers.CurrentUserDefault())
+    category = CategorySerializer()
+    transaction_type = serializers.SerializerMethodField()
+    class Meta:
+        model = ExpenseTracker
+        fields = ['id', 'transaction_type', 'category', 'amount', 'source', 'reason', 'remarks', 'time',  'user']
+
+    def create(self, validated_data):
+        category_name = validated_data.pop("category")
+
+        print(f"Category name is {category_name}")
+
+        if isinstance(category_name, int):
+            category = ExpenseCategory.objects.get(id=category_name)
+        else:
+            category, _ = ExpenseCategory.objects.get_or_create(**category_name)
+        expense = ExpenseTracker.objects.create(category = category, **validated_data)
+        return expense
+
+    def update(self, instance, validated_data):
+        category_name = validated_data.pop("category", None)
+
+        if category_name:
+            instance.category.name = category_name.get("name", instance.category.name)
+            instance.category.save()
+
+        instance.amount = validated_data.get("amount", instance.amount)
+        instance.source = validated_data.get("source", instance.source)
+        instance.reason = validated_data.get("reason", instance.reason)
+        instance.remarks = validated_data.get("remarks", instance.remarks)
+        instance.time = validated_data.get("time", instance.time)
+        instance.user = validated_data.get("user", instance.user)
+        instance.save()
+        return instance
+
+    def get_transaction_type(self, obj):
+        return "Expense"
