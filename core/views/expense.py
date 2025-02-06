@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404
-from core import core_serializers
+from rest_framework import permissions, status
 from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework import permissions
+
+from core import core_serializers
 from core.mixins import CustomResponseMixin
 from core.models import ExpenseTracker
 
@@ -17,11 +17,11 @@ class ExpenseView(CustomResponseMixin, APIView):
         """
         Disply expense form for user
         """
-        pk = kwargs.get('pk', None)
-        print(pk)
-        if pk:
-            expense = get_object_or_404(ExpenseTracker, pk=pk, user=request.user)
-            serializer = core_serializers.IncomeSerializer(expense)
+        id = kwargs.get('id', None)
+        print(id)
+        if id:
+            expense = get_object_or_404(ExpenseTracker, pk=id, user=request.user)
+            serializer = core_serializers.ExpenseSerializer(expense)
             return self.return_response(
                 success=True,
                 message = "Got selected expense successfully",
@@ -70,6 +70,37 @@ class ExpenseView(CustomResponseMixin, APIView):
             status = status.HTTP_400_BAD_REQUEST
         )
 
+    def patch(self, request, *args, **kwargs):
+        income_id = kwargs.get("id")
+        breakpoint()
+        expense_instance = get_object_or_404(ExpenseTracker, id=income_id, user=request.user)
 
+        data = request.data
+        serializer = core_serializers.IncomeSerializer(expense_instance, data=data, partial=True, context = { "request" : request})
+        if serializer.is_valid():
+            serializer.save()
+            return self.return_response(
+                success=True,
+                message="Income updated successfully",
+                data=serializer.data
+            )
+        return self.return_response(
+            success=False,
+            message="An error occured",
+            errors=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request, *args, **kwargs):
+        expense_id = kwargs.get('id')
+        expense_instance = get_object_or_404(ExpenseTracker, id=expense_id, user=request.user)
+
+        expense_instance.delete()
+        return self.return_response(
+            success=True,
+            message="Entry deleted successfully",
+            status = status.HTTP_204_NO_CONTENT
+
+        )
 
 

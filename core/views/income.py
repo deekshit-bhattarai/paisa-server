@@ -67,7 +67,35 @@ class IncomeView(CustomResponseMixin, APIView):
             data=serializer.errors,
             status = status.HTTP_201_CREATED
         )
+    
+    def patch(self, request, *args, **kwargs):
+        income_id = kwargs.get("id")
+        breakpoint()
+        income_instance = get_object_or_404(IncomeTracker, id=income_id, user=request.user)
 
+        data = request.data
+        serializer = core_serializers.IncomeSerializer(income_instance, data=data, partial=True, context = { "request" : request})
+        if serializer.is_valid():
+            serializer.save()
+            return self.return_response(
+                success=True,
+                message="Income updated successfully",
+                data=serializer.data
+            )
+        return self.return_response(
+            success=False,
+            message="An error occured",
+            errors=serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    def delete(self, request, *args, **kwargs):
+        income_id = kwargs.get('id')
+        income_instance = get_object_or_404(IncomeTracker, id=income_id, user=request.user)
 
+        income_instance.delete()
+        return self.return_response(
+            success=True,
+            message="Entry deleted successfully",
+            status = status.HTTP_204_NO_CONTENT
 
-
+        )
