@@ -1,4 +1,4 @@
-# Paisa [WIP]
+# Paisa
 
 A simple expense tracker made with DRF and tailwindcss
 
